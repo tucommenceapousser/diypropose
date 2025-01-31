@@ -2,3 +2,4 @@ flask
 openai
 fpdf
 sqlite3
+python-dotenv
