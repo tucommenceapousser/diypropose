@@ -1,58 +1,117 @@
 from flask import Flask, render_template, request, jsonify
-import openai
 import sqlite3
-from config import OPENAI_API_KEY
+import openai
+from fpdf import FPDF
+import os
 
 app = Flask(__name__)
 
-# Configuration OpenAI
-openai.api_key = OPENAI_API_KEY
+openai.api_key = "TA_CLE_OPENAI"  # Mets ta clé GPT-4 ici
 
-# 📌 Fonction pour générer des idées de projets DIY
-def generer_idees_diy(preferences):
-    prompt = f"Donne-moi 5 idées de projets DIY en rapport avec {preferences}. Chaque projet doit inclure un titre et une courte description."
-    
+# Fonction pour générer une idée de projet
+def generer_idee():
+    prompt = "Donne-moi une idée de projet DIY original."
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}]
     )
-    
     return response["choices"][0]["message"]["content"]
 
-# 📌 Fonction pour générer une image avec DALL·E
-def generer_image(projet):
-    prompt = f"Illustration détaillée d'un projet DIY : {projet}. Style réaliste, mise en situation, haute qualité."
-    
-    response = openai.Image.create(
-        model="dall-e-3",
-        prompt=prompt,
-        size="1024x1024"
+# Fonction pour générer un tutoriel détaillé
+def generer_tutoriel(projet):
+    prompt = f"Crée un tutoriel détaillé pour un projet DIY sur {projet}.\
+    Structure-le ainsi :\
+    - Matériel nécessaire\
+    - Étapes détaillées\
+    - Conseils pratiques\
+    - Lien vers une vidéo YouTube"
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
     )
-    
-    return response["data"][0]["url"]
 
-# 📌 Route pour générer une image
-@app.route('/generer_image', methods=['POST'])
-def generer_image_route():
-    projet = request.form.get('projet')
-    if projet:
-        image_url = generer_image(projet)
-        return jsonify({"image_url": image_url})
-    return jsonify({"error": "Aucun projet spécifié"})
+    return response["choices"][0]["message"]["content"]
 
-# 📌 Route de l’accueil
+# Route : Page d'accueil
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# 📌 Route pour rechercher des idées
-@app.route('/rechercher', methods=['POST'])
-def rechercher():
-    preferences = request.form.get('preferences')
-    if preferences:
-        idees = generer_idees_diy(preferences)
-        return jsonify({"idees": idees})
-    return jsonify({"error": "Aucune préférence fournie"})
+# Route : Obtenir une idée de projet
+@app.route('/get_idea', methods=['GET'])
+def get_idea():
+    idee = generer_idee()
+    return jsonify({"idee": idee})
+
+# Route : Générer un tutoriel
+@app.route('/generer_tutoriel', methods=['POST'])
+def generer_tutoriel_route():
+    projet = request.form.get('projet')
+    
+    if projet:
+        tutoriel = generer_tutoriel(projet)
+        
+        conn = sqlite3.connect("data/diy.db")
+        c = conn.cursor()
+        c.execute('''
+        INSERT OR REPLACE INTO tutoriels (titre, description, materiel, etapes, conseils, video_url, pdf_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (projet, tutoriel, "À compléter", "À compléter", "À compléter", "À compléter", ""))
+        
+        conn.commit()
+        conn.close()
+
+        return jsonify({"tutoriel": tutoriel})
+    
+    return jsonify({"error": "Aucun projet spécifié"})
+
+# Fonction : Générer un PDF
+def generer_pdf(projet, contenu):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, projet, ln=True, align='C')
+    
+    for ligne in contenu.split("\n"):
+        pdf.multi_cell(0, 10, ligne)
+
+    pdf_path = f"static/pdfs/{projet.replace(' ', '_')}.pdf"
+    pdf.output(pdf_path)
+    return pdf_path
+
+# Route : Télécharger le tutoriel en PDF
+@app.route('/telecharger_pdf', methods=['POST'])
+def telecharger_pdf():
+    projet = request.form.get('projet')
+
+    if projet:
+        conn = sqlite3.connect("data/diy.db")
+        c = conn.cursor()
+        c.execute("SELECT description FROM tutoriels WHERE titre = ?", (projet,))
+        data = c.fetchone()
+        conn.close()
+        
+        if data:
+            pdf_path = generer_pdf(projet, data[0])
+            return jsonify({"pdf_url": pdf_path})
+    
+    return jsonify({"error": "Aucun tutoriel trouvé"})
+
+# Route : Ajouter un favori
+@app.route('/ajouter_favori', methods=['POST'])
+def ajouter_favori():
+    projet = request.form.get('projet')
+
+    if projet:
+        conn = sqlite3.connect("data/diy.db")
+        c = conn.cursor()
+        c.execute("INSERT OR IGNORE INTO favoris (titre) VALUES (?)", (projet,))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": "Ajouté aux favoris"})
+    
+    return jsonify({"error": "Erreur d'ajout"})
 
 if __name__ == '__main__':
     app.run(debug=False, host="0.0.0.0")
