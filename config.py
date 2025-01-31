@@ -1,2 +1,8 @@
-# config.py
-OPENAI_API_KEY = "ta_clé_API_openai_ici"
+import os
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
+
+# Récupérer la clé API OpenAI
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
