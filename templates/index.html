@@ -2,47 +2,49 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIY Finder - Trouve ton Projet</title>
+    <title>DIY Generator</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body { background: black; color: lime; font-family: Arial, sans-serif; text-align: center; }
-        input, button { padding: 10px; margin: 5px; }
-        .result { margin-top: 20px; border: 1px solid lime; padding: 10px; }
-        img { margin-top: 10px; width: 300px; border: 1px solid lime; }
-    </style>
 </head>
 <body>
-    <h1>🔧 Trouve un projet DIY 🔧</h1>
+    <h1>🔧 Générateur de Projets DIY</h1>
     
-    <input type="text" id="preferences" placeholder="Ex : Métal, Bois, Électroérosion">
-    <button onclick="rechercherProjets()">🔍 Rechercher</button>
-    
+    <button onclick="obtenirIdee()">💡 Obtenir une Idée</button>
     <div id="resultat"></div>
-    <button id="genererImageBtn" style="display:none;" onclick="genererImage()">📷 Générer une Illustration</button>
-    <div id="imageResult"></div>
+
+    <button id="genererTutorielBtn" style="display:none;" onclick="genererTutoriel()">📖 Obtenir un Tutoriel</button>
+    <div id="tutorielResult"></div>
+
+    <button id="telechargerPdfBtn" style="display:none;" onclick="telechargerPdf()">📥 Télécharger en PDF</button>
+
+    <button id="ajouterFavoriBtn" style="display:none;" onclick="ajouterFavori()">⭐ Ajouter aux Favoris</button>
 
     <script>
-        function rechercherProjets() {
-            var preferences = document.getElementById("preferences").value;
-            $.post("/rechercher", { preferences: preferences }, function(data) {
-                if (data.idees) {
-                    $("#resultat").html("<div class='result'>" + data.idees.replace(/\n/g, "<br>") + "</div>");
-                    $("#genererImageBtn").show();
-                } else {
-                    $("#resultat").html("<div class='result'>Erreur : " + data.error + "</div>");
-                }
+        function obtenirIdee() {
+            $.get("/get_idea", function(data) {
+                $("#resultat").html("<div class='result'>" + data.idee + "</div>");
+                $("#genererTutorielBtn").show();
             });
         }
 
-        function genererImage() {
+        function genererTutoriel() {
             var projet = $("#resultat").text();
-            $.post("/generer_image", { projet: projet }, function(data) {
-                if (data.image_url) {
-                    $("#imageResult").html("<img src='" + data.image_url + "'>");
-                } else {
-                    $("#imageResult").html("<div class='result'>Erreur : " + data.error + "</div>");
-                }
+            $.post("/generer_tutoriel", { projet: projet }, function(data) {
+                $("#tutorielResult").html("<div class='result'>" + data.tutoriel.replace(/\n/g, "<br>") + "</div>");
+                $("#telechargerPdfBtn, #ajouterFavoriBtn").show();
+            });
+        }
+
+        function telechargerPdf() {
+            var projet = $("#resultat").text();
+            $.post("/telecharger_pdf", { projet: projet }, function(data) {
+                window.location.href = data.pdf_url;
+            });
+        }
+
+        function ajouterFavori() {
+            var projet = $("#resultat").text();
+            $.post("/ajouter_favori", { projet: projet }, function(data) {
+                alert(data.success || data.error);
             });
         }
     </script>
