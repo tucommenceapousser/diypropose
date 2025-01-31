@@ -25,12 +25,12 @@ cd diypropose
 pip install -r requirements.txt
 ```
 
-3️⃣ Configurer la clé OpenAI
+3️⃣ Créer le fichier .env
 
-Dans config.py, ajoute ta clé OpenAI :
+Dans ton dossier principal, crée un fichier .env et ajoute :
 
-```python
-OPENAI_API_KEY = "TA_CLE_OPENAI"
+```json
+OPENAI_API_KEY=ta_cle_openai
 ```
 
 4️⃣ Initialiser la base de données
