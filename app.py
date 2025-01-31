@@ -3,10 +3,12 @@ import sqlite3
 import openai
 from fpdf import FPDF
 import os
+import config  # Import de la configuration
 
 app = Flask(__name__)
 
-openai.api_key = "TA_CLE_OPENAI"  # Mets ta clé GPT-4 ici
+# Utilisation de la clé OpenAI depuis config.py
+openai.api_key = config.OPENAI_API_KEY
 
 # Fonction pour générer une idée de projet
 def generer_idee():
