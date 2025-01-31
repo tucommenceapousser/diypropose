@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIY Finder - Trouve ton Projet</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { background: black; color: lime; font-family: Arial, sans-serif; text-align: center; }
+        input, button { padding: 10px; margin: 5px; }
+        .result { margin-top: 20px; border: 1px solid lime; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Trouve un projet DIY 🔧</h1>
+    
+    <input type="text" id="preferences" placeholder="Ex : Métal, Bois, Électroérosion">
+    <button onclick="rechercherProjets()">🔍 Rechercher</button>
+    
+    <div id="resultat"></div>
+
+    <script>
+        function rechercherProjets() {
+            var preferences = document.getElementById("preferences").value;
+            $.post("/rechercher", { preferences: preferences }, function(data) {
+                if (data.idees) {
+                    $("#resultat").html("<div class='result'>" + data.idees.replace(/\n/g, "<br>") + "</div>");
+                } else {
+                    $("#resultat").html("<div class='result'>Erreur : " + data.error + "</div>");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
