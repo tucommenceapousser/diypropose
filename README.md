@@ -15,7 +15,7 @@ Ce projet permet de générer des **idées de projets DIY (Do It Yourself)** ave
 
 ### 1️⃣ Cloner le projet  
 ```bash
-git clone https://github.com/ton-utilisateur/diy-project.git
+git clone https://github.com/tucommenceapousser/diypropose
 cd diy-project
 ```
 
