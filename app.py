@@ -19,6 +19,27 @@ def generer_idees_diy(preferences):
     
     return response["choices"][0]["message"]["content"]
 
+# 📌 Fonction pour générer une image avec DALL·E
+def generer_image(projet):
+    prompt = f"Illustration détaillée d'un projet DIY : {projet}. Style réaliste, mise en situation, haute qualité."
+    
+    response = openai.Image.create(
+        model="dall-e-3",
+        prompt=prompt,
+        size="1024x1024"
+    )
+    
+    return response["data"][0]["url"]
+
+# 📌 Route pour générer une image
+@app.route('/generer_image', methods=['POST'])
+def generer_image_route():
+    projet = request.form.get('projet')
+    if projet:
+        image_url = generer_image(projet)
+        return jsonify({"image_url": image_url})
+    return jsonify({"error": "Aucun projet spécifié"})
+
 # 📌 Route de l’accueil
 @app.route('/')
 def index():
