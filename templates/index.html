@@ -9,6 +9,7 @@
         body { background: black; color: lime; font-family: Arial, sans-serif; text-align: center; }
         input, button { padding: 10px; margin: 5px; }
         .result { margin-top: 20px; border: 1px solid lime; padding: 10px; }
+        img { margin-top: 10px; width: 300px; border: 1px solid lime; }
     </style>
 </head>
 <body>
@@ -18,6 +19,8 @@
     <button onclick="rechercherProjets()">🔍 Rechercher</button>
     
     <div id="resultat"></div>
+    <button id="genererImageBtn" style="display:none;" onclick="genererImage()">📷 Générer une Illustration</button>
+    <div id="imageResult"></div>
 
     <script>
         function rechercherProjets() {
@@ -25,8 +28,20 @@
             $.post("/rechercher", { preferences: preferences }, function(data) {
                 if (data.idees) {
                     $("#resultat").html("<div class='result'>" + data.idees.replace(/\n/g, "<br>") + "</div>");
+                    $("#genererImageBtn").show();
                 } else {
                     $("#resultat").html("<div class='result'>Erreur : " + data.error + "</div>");
+                }
+            });
+        }
+
+        function genererImage() {
+            var projet = $("#resultat").text();
+            $.post("/generer_image", { projet: projet }, function(data) {
+                if (data.image_url) {
+                    $("#imageResult").html("<img src='" + data.image_url + "'>");
+                } else {
+                    $("#imageResult").html("<div class='result'>Erreur : " + data.error + "</div>");
                 }
             });
         }
